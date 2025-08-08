@@ -10,9 +10,9 @@
 <a href="https://www.python.org/" title="Python官网">点击这里前往Python官网下载</a>
 <p>推荐把Python添加到环境变量中</p>
 <p>安装好Python后，使用</p>
-<code>base64_tool.py --version</code>
+<code>python base64_tool.py --version</code>
 <p>查看当前版本，使用</p>
-<code>base64_tool.py --help查看帮助</code>
+<code>python base64_tool.py --help查看帮助</code>
 <p>工具主要命令有encode,decode,genkeys</p>
 <p>encode作用：编码文件</p>
 <p>encode有5个选项，-h,-c,-t,-s,-e</p>
@@ -61,4 +61,3 @@
 <br>                        私钥输出文件 (默认: private.pem)
 </blockquote>
 <p>但其实genkeys可以无参运行，直接运行会在当前shell所在目录生成private.pem和public.pem，密钥大小为2048位</p>
-<p>同时虽然可以，但是不推荐在工具本体以外的shell目录运行，因为版本号抓取的是当前shell目录的ver.txt而不是工具目录的ver.txt，幸好AI做了异常捕捉，会输出未知版本，目前正在与AI交涉，让这个Bug消失</p>
