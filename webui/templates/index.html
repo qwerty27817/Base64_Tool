@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64编解码工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #6c757d;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        .form-section {
+            margin-bottom: 20px;
+        }
+        .file-size-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="text-center mb-4">
+            <h1 class="display-4">Base64编解码工具</h1>
+            <p class="lead">支持加盐、压缩和RSA加密的文件转换工具</p>
+        </div>
+
+        <div class="file-size-warning">
+            <strong>注意：</strong> Web版限制最大文件大小为100MB。对于更大的文件，请下载使用
+            <a href="{{ script_download_url }}" target="_blank">命令行版本</a>。
+        </div>
+
+        <div class="row">
+            <!-- 编码区域 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>编码文件</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="encodeForm" method="post" action="/encode" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="encodeFile" class="form-label">选择要编码的文件</label>
+                                <input class="form-control" type="file" id="encodeFile" name="file" required>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="compress" name="compress">
+                                <label class="form-check-label" for="compress">启用压缩</label>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="saltEncode" class="form-label">加盐值（可选）</label>
+                                <input type="text" class="form-control" id="saltEncode" name="salt" placeholder="输入盐值">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="publicKey" class="form-label">RSA公钥（可选）</label>
+                                <input class="form-control" type="file" id="publicKey" name="public_key" accept=".pem">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">编码文件</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 解码区域 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>解码文件</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="decodeForm" method="post" action="/decode" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="decodeFile" class="form-label">选择要解码的文件 (.b64)</label>
+                                <input class="form-control" type="file" id="decodeFile" name="file" accept=".b64" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="saltDecode" class="form-label">盐值（如果编码时使用）</label>
+                                <input type="text" class="form-control" id="saltDecode" name="salt" placeholder="输入盐值">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="privateKey" class="form-label">RSA私钥（如果编码时使用）</label>
+                                <input class="form-control" type="file" id="privateKey" name="private_key" accept=".pem">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success w-100">解码文件</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 密钥生成区域 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>生成RSA密钥对</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="keygenForm" method="post" action="/generate_keys">
+                            <div class="mb-3">
+                                <label for="keySize" class="form-label">密钥大小</label>
+                                <select class="form-select" id="keySize" name="key_size">
+                                    <option value="2048" selected>2048位（推荐）</option>
+                                    <option value="3072">3072位</option>
+                                    <option value="4096">4096位</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-info w-100">生成密钥对</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 说明区域 -->
+        <div class="mt-4 text-center text-muted">
+            <p>Web版限制最大文件大小为100MB | 
+                <a href="{{ script_download_url }}" target="_blank">下载命令行版本</a> |
+                <a href="#" data-bs-toggle="modal" data-bs-target="#instructionsModal">使用说明</a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- 使用说明模态框 -->
+    <div class="modal fade" id="instructionsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">使用说明</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>编码文件：</h6>
+                    <ul>
+                        <li>上传需要编码的文件</li>
+                        <li>可选：启用压缩、添加盐值、使用RSA公钥加密</li>
+                        <li>结果文件将使用.b64扩展名</li>
+                    </ul>
+                    
+                    <h6>解码文件：</h6>
+                    <ul>
+                        <li>上传.b64格式的编码文件</li>
+                        <li>如果编码时使用了盐值或加密，请提供相同的盐值和私钥</li>
+                        <li>结果文件将恢复为原始格式</li>
+                    </ul>
+                    
+                    <h6>生成RSA密钥：</h6>
+                    <ul>
+                        <li>选择密钥大小（推荐2048位）</li>
+                        <li>下载的ZIP文件包含公钥和私钥</li>
+                        <li>公钥用于编码加密，私钥用于解码解密</li>
+                    </ul>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <strong>安全提示：</strong> 私钥文件必须妥善保管，不要泄露给他人！
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 文件大小检查
+        document.getElementById('encodeFile').addEventListener('change', function(e) {
+            checkFileSize(this, 100);
+        });
+        
+        document.getElementById('decodeFile').addEventListener('change', function(e) {
+            checkFileSize(this, 100);
+        });
+        
+        function checkFileSize(input, maxSizeMB) {
+            if (input.files && input.files[0]) {
+                const fileSizeMB = input.files[0].size / (1024 * 1024);
+                if (fileSizeMB > maxSizeMB) {
+                    alert(`文件大小超过${maxSizeMB}MB限制，请使用命令行版本处理大文件`);
+                    input.value = '';
+                }
+            }
+        }
+        
+        // 表单提交处理
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const button = this.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> 处理中...';
+            });
+        });
+    </script>
+</body>
+</html>
